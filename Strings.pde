@@ -3,6 +3,9 @@ import ddf.minim.signals.*;
 import ddf.minim.analysis.*;
 import ddf.minim.effects.*;
 
+import org.openkinect.*;
+import org.openkinect.processing.*;
+
 
 // variables
 boolean isMouseDown = false;
@@ -43,6 +46,9 @@ AudioSample[] arrSamples = new AudioSample[notes];
 //AudioSnippet[] arrSamples = new AudioSnippet[notes];
 
 
+KinectTracker tracker;
+Kinect kinect;
+
 // -----------------------------------------------------
 // Setup and draw loop
 // -----------------------------------------------------  
@@ -54,6 +60,9 @@ void setup() {
   for (int i = 0; i < 15; i++) {    
     addThread(random(width), random(height), random(width), random(height));
   }
+  
+  kinect = new Kinect(this);
+  tracker = new KinectTracker();
   
   //
   // initialize audio
@@ -71,6 +80,10 @@ void setup() {
 void draw() {
   // clear background
   background(255);
+  
+  tracker.track();
+  tracker.display();
+  
   // update everything
   upd();
   
@@ -219,10 +232,12 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  return mouseX-xo;
+  float mouseXRel = mouseX-xo;
+  return mouseXRel;
 }
 float getUserY() {
-  return mouseY-yo;
+  float mouseYRel = mouseY-yo;
+  return mouseYRel;
 }
 
 // -----------------------------------------------------

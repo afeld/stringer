@@ -87,10 +87,12 @@ class Thready {
   
   // my pitch index (0, 1, 2...) - and as ratio
   int pitchInd; float rPitch;
+  // reference to my audio sample
+  AudioSample au;
   // lowest and highest volume for notes triggered by user
-  float vol0 = 0.3; float vol1 = 0.5;
-  // lowest and highest volume for cars
-  float vol0Car = 0.2; float vol1Car = 0.55;
+  float vol0 = 0.3; float vol1 = 0.6;
+  // gain range triggered by user (db change)
+  float gain0 = -15; float gain1 = -2;
   // is update on
   boolean isUpdOn = false;
   // oscillation direction (-1 or 1)
@@ -183,7 +185,17 @@ class Thready {
     xc = xMid; yc = yMid;
     // set my pitch index (0, 1, 2, 3...)
     pitchInd = floor(rPitch*(notes-0.0001));
-
+    // need to initialize for that sample?
+    if (arrSamples[pitchInd] == null) {
+      // load that sample
+      String pre = pitchInd < 10 ? "0" : "";
+      // store it
+      au = arrSamples[pitchInd] = minim.loadSample("cello_" + pre + pitchInd + ".mp3", 1024);
+    } else {
+      // my audio object
+      au = arrSamples[pitchInd];
+    }
+    
     // store max distance we can pull from middle of string perpendicularly
     distMax = rDistMax*len;
     //
@@ -379,26 +391,16 @@ class Thready {
       // start oscillating
       startOsc();
     }
-    /*
-	var vol;
-	// calculate volume
-	if (byUser) {
-		vol = lerp(this.vol0, this.vol1, this.rStrength);
-	// it's a car
-	} else {
-		vol = lerp(this.vol0Car, this.vol1Car, this.rStrength);			
-	}
-	// set pan based on x position
-	var panRat = lerp(this.pan0, this.pan1, lim(xu/this.m.width, 0, 1));
-	
-	// play note
-	this.playNote(vol, panRat);
-    */
-    playNote();
+    // calculate gain
+    float gain = lerp(gain0, gain1, rStrength);
+    // set pan based on x position
+    // var panRat = lerp(this.pan0, this.pan1, lim(xu/this.m.width, 0, 1));
+    playNote(gain);
   }
   
   // grab this string and hold it
   void grab(float xp, float yp, boolean byUser, Car car) {
+    grabbed++;
     if (byUser) {
       //
       carGrab = null;
@@ -421,24 +423,15 @@ class Thready {
 
   // drop this thread
   void drop() {
-    float vol;
+    grabbed--;
     //
     isGrabbed = false;
     // reset me
     xc = xMid; yc = yMid;
     // store current amplitude based on strength
     amp = rStrength*ampMax;
-    // play note - is it by a car?
-    if (carGrab != null) {
-      /*
-      var vol = lerp(this.vol0Car, this.vol1Car, this.rStrength);
-      this.carGrab.thrGrab = null;
-      this.carGrab = null;
-      */
-    // else use normal user volume limits
-    } else {
-      vol = lerp(vol0, vol1, rStrength);
-    }
+    // calculate gain
+    float gain = lerp(gain0, gain1, rStrength);
     /*
     // set pan based on x position
     var posRat = lim((this.xg+this.xo)/this.m.width, 0, 1);
@@ -447,7 +440,7 @@ class Thready {
     //
     this.playNote(vol, pan);
     */
-    playNote();
+    playNote(gain);
     // start oscillation
     this.startOsc();	
   } 
@@ -455,15 +448,14 @@ class Thready {
   // -----------------------------------------------------
   // Other functions
   // -----------------------------------------------------
-  void playNote() {
+  void playNote(float gain) {
     // normalize pan to -1 to 1
     // smPlayNote(this.pitchInd, vol, pan);
-    
-    
-    //
-    arrSamples[pitchInd].trigger();
-    println("pitchInd : " + pitchInd);
-    println("arrSamples[pitchInd] : " + arrSamples[pitchInd]);
+    //auPlayNote(pitchInd);
+    if (au.hasControl(Controller.GAIN)) {
+      au.setGain(gain);
+    }
+    au.trigger();    
   }
   
   void startOsc() {

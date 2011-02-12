@@ -34,12 +34,13 @@ PVector pt0 = new PVector(0, 0);
 PVector pt1 = new PVector(0, 0);
 // user speed low limit where we can grab and hold string (as ratio)
 float rSpdGrab = 0.4;
-// how many notes
-int notes = 32;
+// how many possible notes, mp3 files
+int notes = 38;
 // Audio
 Minim minim;
 // array of audio player objects
 AudioSample[] arrSamples = new AudioSample[notes];
+//AudioSnippet[] arrSamples = new AudioSnippet[notes];
 
 
 // -----------------------------------------------------
@@ -47,22 +48,23 @@ AudioSample[] arrSamples = new AudioSample[notes];
 // -----------------------------------------------------  
 
 void setup() {
+  minim = new Minim(this);
   frameRate(40);
-  size(640, 480);
-  for (int i = 0; i < 10; i++) {    
+  size(800, 600);
+  for (int i = 0; i < 15; i++) {    
     addThread(random(width), random(height), random(width), random(height));
   }
   
-  minim = new Minim(this);
   //
-  String pre; AudioSample as;
   // initialize audio
+  /*
+  String pre; AudioSample as;
   for (int i = 0; i < notes; i++) {
     pre = i < 10 ? "0" : "";
     as = minim.loadSample("cello_" + pre + i + ".mp3", 512);
     arrSamples[i] = as;
-    //as.trigger();
   }
+  */
 }
 
 // draw loop
@@ -157,6 +159,11 @@ void updThreads() {
 }
 
 // -----------------------------------------------------
+// Audio
+// -----------------------------------------------------
+
+
+// -----------------------------------------------------
 // mouse listeners
 // -----------------------------------------------------
 
@@ -199,7 +206,11 @@ boolean isGrabbing() {
 
 // drop all threads
 void dropAll() {
-  
+  Thready th;
+  for (int i = 0; i < ctThreads; i++) {
+    th = arrThreads[i];
+    if (th.isGrabbed) th.drop();
+  }
 }
 
 float getSpdAvg() {

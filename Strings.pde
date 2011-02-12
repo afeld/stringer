@@ -49,6 +49,8 @@ AudioSample[] arrSamples = new AudioSample[notes];
 KinectTracker tracker;
 Kinect kinect;
 
+PVector handPos;
+
 // -----------------------------------------------------
 // Setup and draw loop
 // -----------------------------------------------------  
@@ -102,9 +104,32 @@ void upd() {
   // update my threads
   updThreads();
   // update mouse down mode?
-  if (isMouseDown) updMouseDown();
+  //if (isMouseDown) updMouseDown();
+  updMouseDown();
+  
+  updInfo();
   // increment time
   t0 = t1;
+}
+
+void updInfo(){
+ int t = tracker.getThreshold();
+  fill(0);
+  text("threshold: " + t + "    " +  "framerate: " + (int)frameRate + "    " + "UP increase threshold, DOWN decrease threshold",10,500); 
+}
+
+void keyPressed() {
+  int t = tracker.getThreshold();
+  if (key == CODED) {
+    if (keyCode == UP) {
+      t+=5;
+      tracker.setThreshold(t);
+    }
+    else if (keyCode == DOWN) {
+      t-=5;
+      tracker.setThreshold(t);
+    }
+  }
 }
 
 // main update function
@@ -114,6 +139,12 @@ void updTime() {
 
 // update position general
 void updPos() {
+  handPos = tracker.getPos();
+  
+  fill(50,100,250,200);
+  noStroke();
+  ellipse(handPos.x,handPos.y,20,20);
+  
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
   // reset the channels, nothing is playing anymore. Fixes bug where channel count doesn't go to zero
@@ -232,12 +263,14 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  float mouseXRel = mouseX-xo;
-  return mouseXRel;
+  //float mouseXRel = mouseX-xo;
+  //return mouseXRel;
+  return handPos.x;
 }
 float getUserY() {
-  float mouseYRel = mouseY-yo;
-  return mouseYRel;
+  //float mouseYRel = mouseY-yo;
+  //return mouseYRel;
+  return handPos.y;
 }
 
 // -----------------------------------------------------
@@ -268,5 +301,10 @@ float lim(float n, float n0, float n1) {
 // Returns 1 or -1 sign of the number - returns 1 for 0
 int sign(float n) {
   if (n >= 0) { return 1; } else { return -1; }
+}
+
+void stop() {
+  tracker.quit();
+  super.stop();
 }
 

@@ -3,6 +3,10 @@ import ddf.minim.signals.*;
 import ddf.minim.analysis.*;
 import ddf.minim.effects.*;
 
+import org.openkinect.*;
+import org.openkinect.processing.*;
+
+
 // variables
 boolean isMouseDown = false;
 // are we in draw mode?
@@ -45,6 +49,11 @@ AudioSample[] arrSamples = new AudioSample[notes];
 //AudioSnippet[] arrSamples = new AudioSnippet[notes];
 
 
+KinectTracker tracker;
+Kinect kinect;
+
+PVector handPos;
+
 // -----------------------------------------------------
 // Setup and draw loop
 // -----------------------------------------------------  
@@ -52,7 +61,12 @@ AudioSample[] arrSamples = new AudioSample[notes];
 void setup() {
   minim = new Minim(this);
   frameRate(40);
-  size(800, 600);
+  
+  kinect = new Kinect(this);
+  tracker = new KinectTracker();
+  
+  size(tracker.kw, tracker.kh+40);
+
   // create some random threads for testing
   /*
   for (int i = 0; i < 3; i++) {    
@@ -75,6 +89,10 @@ void setup() {
 void draw() {
   // clear background
   background(255);
+  
+  tracker.track();
+  tracker.display();
+  
   // update everything
   upd();
   
@@ -95,16 +113,28 @@ void upd() {
   // update my threads
   updThreads();
   // update mouse down mode?
-  if (isMouseDown) {
-    // are we in draw mode?
-    if (isDrawMode) {
-      updMouseDownDraw();
-    } else {
-      updMouseDown();
-    }
+  if (isMouseDown && isDrawMode) {
+    updMouseDownDraw();
+  } else {
+    updMouseDown();
   }
+  
+  updDisplay();
+
   // increment time
   t0 = t1;
+}
+
+void updDisplay(){
+  int t = tracker.getThreshold();
+  fill(0);
+  text("threshold: " + t + "    " +  
+    "framerate: " + (int)frameRate + "    " + 
+    "UP increase threshold, DOWN decrease threshold",10,height-15); 
+  
+  fill(50,100,250,200);
+  noStroke();
+  ellipse(handPos.x,handPos.y,20,20);
 }
 
 // main update function
@@ -114,6 +144,8 @@ void updTime() {
 
 // update position general
 void updPos() {
+  handPos = tracker.getPos();
+  
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
   // reset the channels, nothing is playing anymore. Fixes bug where channel count doesn't go to zero
@@ -173,7 +205,12 @@ void updMouseDownDraw() {
 
 // update all threads
 void updThreads() {
+  noFill();
+  stroke(255);
+  strokeWeight(4);
+  smooth();
   for (int i = 0; i < ctThreads; i++) arrThreads[i].upd();
+  noSmooth();
 }
 
 // -----------------------------------------------------
@@ -225,6 +262,16 @@ void keyPressed() {
       println("You are in draw mode.");
       isDrawMode = true;
     }
+  } else if (key == CODED) {
+    int t = tracker.getThreshold();
+    if (keyCode == UP) {
+      t+=5;
+      tracker.setThreshold(t);
+    }
+    else if (keyCode == DOWN) {
+      t-=5;
+      tracker.setThreshold(t);
+    }
   }
 }
 
@@ -265,10 +312,14 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  return mouseX-xo;
+  //float mouseXRel = mouseX-xo;
+  //return mouseXRel;
+  return handPos.x;
 }
 float getUserY() {
-  return mouseY-yo;
+  //float mouseYRel = mouseY-yo;
+  //return mouseYRel;
+  return handPos.y;
 }
 
 // -----------------------------------------------------
@@ -299,5 +350,10 @@ float lim(float n, float n0, float n1) {
 // Returns 1 or -1 sign of the number - returns 1 for 0
 int sign(float n) {
   if (n >= 0) { return 1; } else { return -1; }
+}
+
+void stop() {
+  tracker.quit();
+  super.stop();
 }
 

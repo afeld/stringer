@@ -58,13 +58,14 @@ PVector handPos;
 void setup() {
   minim = new Minim(this);
   frameRate(40);
-  size(800, 600);
-  for (int i = 0; i < 15; i++) {    
-    addThread(random(width), random(height), random(width), random(height));
-  }
   
   kinect = new Kinect(this);
   tracker = new KinectTracker();
+  
+  size(tracker.kw, tracker.kh+40);
+  for (int i = 0; i < 15; i++) {
+    addThread(random(width), random(height), random(width), random(height));
+  }
   
   //
   // initialize audio
@@ -107,15 +108,21 @@ void upd() {
   //if (isMouseDown) updMouseDown();
   updMouseDown();
   
-  updInfo();
+  updDisplay();
   // increment time
   t0 = t1;
 }
 
-void updInfo(){
- int t = tracker.getThreshold();
+void updDisplay(){
+  int t = tracker.getThreshold();
   fill(0);
-  text("threshold: " + t + "    " +  "framerate: " + (int)frameRate + "    " + "UP increase threshold, DOWN decrease threshold",10,500); 
+  text("threshold: " + t + "    " +  
+    "framerate: " + (int)frameRate + "    " + 
+    "UP increase threshold, DOWN decrease threshold",10,height-15); 
+  
+  fill(50,100,250,200);
+  noStroke();
+  ellipse(handPos.x,handPos.y,20,20);
 }
 
 void keyPressed() {
@@ -140,10 +147,6 @@ void updTime() {
 // update position general
 void updPos() {
   handPos = tracker.getPos();
-  
-  fill(50,100,250,200);
-  noStroke();
-  ellipse(handPos.x,handPos.y,20,20);
   
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
@@ -199,7 +202,12 @@ void updMouseDown() {
 
 // update all threads
 void updThreads() {
+  noFill();
+  stroke(255);
+  strokeWeight(4);
+  smooth();
   for (int i = 0; i < ctThreads; i++) arrThreads[i].upd();
+  noSmooth();
 }
 
 // -----------------------------------------------------

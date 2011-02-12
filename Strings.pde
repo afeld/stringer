@@ -3,10 +3,12 @@ import ddf.minim.signals.*;
 import ddf.minim.analysis.*;
 import ddf.minim.effects.*;
 
-
 // variables
 boolean isMouseDown = false;
-
+// are we in draw mode?
+boolean isDrawMode = true;
+// my current drawing object
+Drawer drawer0;
 // min and max speed, when to cap it - pixels per millisecond
 float spdMin = 70; float spdMax = 1500; float spd;
 // min max speed as a ratio
@@ -51,10 +53,12 @@ void setup() {
   minim = new Minim(this);
   frameRate(40);
   size(800, 600);
-  for (int i = 0; i < 15; i++) {    
+  // create some random threads for testing
+  /*
+  for (int i = 0; i < 3; i++) {    
     addThread(random(width), random(height), random(width), random(height));
   }
-  
+  */  
   //
   // initialize audio
   /*
@@ -86,10 +90,19 @@ void upd() {
   updTime();
   // update position
   updPos();
+  // update the current drawing
+  if (isDrawMode && (drawer0 != null)) drawer0.upd();
   // update my threads
   updThreads();
   // update mouse down mode?
-  if (isMouseDown) updMouseDown();
+  if (isMouseDown) {
+    // are we in draw mode?
+    if (isDrawMode) {
+      updMouseDownDraw();
+    } else {
+      updMouseDown();
+    }
+  }
   // increment time
   t0 = t1;
 }
@@ -153,6 +166,11 @@ void updMouseDown() {
   }
 }
 
+// update while mouse down in draw mode
+void updMouseDownDraw() {
+  
+}
+
 // update all threads
 void updThreads() {
   for (int i = 0; i < ctThreads; i++) arrThreads[i].upd();
@@ -170,16 +188,44 @@ void updThreads() {
 // mouseDown
 void mousePressed() {
   isMouseDown = true;
-  // check instant grab - in case they pressed right on top of a thread
-  checkInstantGrab();	
+  // in draw mode
+  if (isDrawMode) {
+    drawer0 = new Drawer(getUserX(), getUserY());
+  
+  // in play mode
+  } else {
+    // check instant grab - in case they pressed right on top of a thread
+    checkInstantGrab();	
+  }
 }
 
 // mouseUp
 void mouseReleased() {
   // stop updating
   isMouseDown = false;
-  // if we currently have one
-  if (isGrabbing()) dropAll();
+  // in draw mode
+  if (isDrawMode) {
+    // tell drawer we are done
+    drawer0.done(); drawer0 = null;
+    
+  // in play mode
+  } else {
+    // if we currently have one
+    if (isGrabbing()) dropAll();
+  }
+}
+
+void keyPressed() {
+  if (key == 'd' || key == 'D') {
+    // toggle mode
+    if (isDrawMode) {
+      println("You are in play mode.");
+      isDrawMode = false;
+    } else {
+      println("You are in draw mode.");
+      isDrawMode = true;
+    }
+  }
 }
 
 // -----------------------------------------------------

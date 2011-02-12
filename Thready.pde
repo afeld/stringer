@@ -119,7 +119,6 @@ class Thready {
   //Thready[] arrIntersect = new Thready[100];
   //boolean didInitIntersect = false;
   
-  
   // -----------------------------------------------------
   // Constructor
   // -----------------------------------------------------

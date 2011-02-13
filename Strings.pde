@@ -56,6 +56,8 @@ Kinect kinect;
 Sidewalk sidewalk;
 
 PVector handPos;
+// middle y axis
+float yAxis;
 
 // -----------------------------------------------------
 // Setup and draw loop
@@ -75,6 +77,8 @@ void setup() {
     w = 640; h = 520;
   }
   size(w,h);
+  // store y axis
+  yAxis = height/2;
   //
   sidewalk = new Sidewalk();
 }
@@ -117,11 +121,12 @@ void upd() {
 }
 
 void updKinectInfo(){
+  /*
   int t = tracker.getThreshold();
   fill(70);
   text("threshold: " + t + "    " +  
     "framerate: " + (int)frameRate + "    ", 10, height-15);
-    //"UP increase threshold, DOWN decrease threshold",10,height-15); 
+  */
   
   // show the hand position
   if (isEngaged) {
@@ -130,7 +135,8 @@ void updKinectInfo(){
     fill(255, 200);
     noStroke();
     smooth();
-    ellipse(handPos.x,handPos.y,25,25);
+    ellipse(handPos.x, yAxis, 25,25);
+    //ellipse(getUserX(), getUserY(), 25,25);
     noSmooth();
   }
 }
@@ -258,7 +264,9 @@ void disengage() {
 }
 
 void keyPressed() {
-  if (key == 'd' || key == 'D') {
+  if (key == 'r' || key == 'r') {
+    sidewalk.reconfigure();
+  } else if (key == 'd' || key == 'D') {
     // toggle mode
     if (isDrawMode) {
       println("You are in play mode.");
@@ -274,10 +282,12 @@ void keyPressed() {
     if (keyCode == UP) {
       t+=5;
       tracker.setThreshold(t);
+      println("Threshold: " + t);
     }
     else if (keyCode == DOWN) {
       t-=5;
       tracker.setThreshold(t);
+      println("Threshold: " + t);
     }
   }
 }
@@ -319,11 +329,33 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  if (haveKinect) return handPos.x;
-  return mouseX-xo;
+  // if mouse is down, trump the kinect
+  /*
+  if (isMouseDown || !haveKinect) {
+    return mouseX-xo;
+  } else {
+  */
+    if (haveKinect) {
+      // just return our y center
+      return handPos.x;
+    }
+  //}
+  return mouseX-xo;  
 }
+
 float getUserY() {
-  if (haveKinect) return handPos.y;
+  // if mouse is down, trump the kinect
+  /*
+  if (isMouseDown || !haveKinect) {
+    return mouseY-yo;
+  } else {
+  */
+    if (haveKinect) {
+      //return handPos.y;
+      // keep it centered
+      return yAxis;
+    }
+  //}
   return mouseY-yo;
 }
 

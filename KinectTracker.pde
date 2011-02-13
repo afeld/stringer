@@ -4,7 +4,7 @@ class KinectTracker {
   int kw = 640;
   int kh = 480;
   // Set default threshhold
-  int threshold = 700;
+  int threshold = 900;
   // lerp easing - from 0 to 1, how quickly dot eases to position
   float lerpEase = 0.2;
   // Raw location
@@ -113,7 +113,8 @@ class KinectTracker {
           // set color for the ones in threshhold
           rat = 1-(float)rawDepth/threshold;
           // set the grey value proportional to the depth
-          display.pixels[pix] = color(rat*255);
+          // display.pixels[pix] = color(rat*255);
+          display.pixels[pix] = color(50+rat*120);
         } 
         else {
           // couldn't get this to work:

@@ -1,8 +1,8 @@
 class Thready {
   
   // current position and original position
-  float xp0, yp0, xpo0, ypo0;
-  float xp1, yp1, xpo1, ypo1;
+  float xp0, yp0, ypt0;
+  float xp1, yp1, ypt1;
   // store distance
   float dx, dy;
   // array of current start/end points
@@ -20,7 +20,7 @@ class Thready {
   // drawing point
   float xd, yd;
   // ratio for curvature. Make this around 0.5 or higher
-  float rBezier = 0.3;
+  float rBezier = 0.2;
   // distance we can pull perpendicularly from middle pt of string (as ratio length)
   // (amplitude of wave)
   float rDistMax = 0.15;
@@ -47,7 +47,7 @@ class Thready {
   float ampDamp;
   // length where we cap it highest/lowest pitch (px)
   // our longest thread is 658, shortest is 19
-  float len0 = 30; float len1 = 650; 
+  float len0 = 30; float len1 = 480;
   // temporary distance variables
   float distMax; float distPerp;
   // how close do we have to be to instantly grab a thread - perpendicular distance (px)
@@ -63,8 +63,9 @@ class Thready {
   float len; float lenOrig;
   // how much are we stretched, as a ratio from 0 (straight line) to 1 (max elastic)
   float rStretch = 0;
-  // my route object that I belong to
-  // float route = routePm; 
+  // easing resize ratio
+  float resizeEase = 0.08;
+  
  
   // temporary variables
   float dx0, dy0, dx1, dy1, dist0, dist1;
@@ -107,8 +108,10 @@ class Thready {
   boolean isFirstOsc = false;
   // not drawn yet
   boolean isVisible = false; 
-  
+  //
   boolean isFirstRun = true;
+  // is resizing
+  boolean isResizing = false;
   
   // -----------------------------------------------------
   // Constructor
@@ -135,8 +138,7 @@ class Thready {
   // general update
   void upd() {
     // update position - don't need to trigger unless it's moving
-    // updPos();
-    
+    if (isResizing) updPos();
     // is thread currently grabbed
     if (isGrabbed) {
       updGrab();
@@ -150,6 +152,16 @@ class Thready {
   
   // update position
   void updPos() {
+    if (isResizing) {
+      yp0 += (ypt0-yp0)*resizeEase;
+      yp1 += (ypt1-yp1)*resizeEase;
+      // are we there?
+      if (abs(ypt0-yp0) < 1) {
+        // snap there
+        yp0 = ypt0; yp1 = ypt1;
+        resizeDone();
+      }
+    }
     // store values in my point object
     pt0.x = xp0; pt0.y = yp0;
     pt1.x = xp1; pt1.y = yp1;
@@ -175,17 +187,19 @@ class Thready {
     xc = xMid; yc = yMid;
     // set my pitch index (0, 1, 2, 3...)
     pitchInd = floor(rPitch*(notes-0.0001));
-    // need to initialize for that sample?
-    if (arrSamples[pitchInd] == null) {
-      // load that sample
-      String pre = pitchInd < 10 ? "0" : "";
-      // store it
-      au = arrSamples[pitchInd] = minim.loadSample("cello_" + pre + pitchInd + ".mp3", 1024);
-    } else {
-      // my audio object
-      au = arrSamples[pitchInd];
+    // don't run this if we're mid-resize
+    if (!isResizing) {
+      // need to initialize for that sample?
+      if (arrSamples[pitchInd] == null) {
+        // load that sample
+        String pre = pitchInd < 10 ? "0" : "";
+        // store it
+        au = arrSamples[pitchInd] = minim.loadSample("cello_" + pre + pitchInd + ".mp3", 1024);
+      } else {
+        // my audio object
+        au = arrSamples[pitchInd];
+      }
     }
-    
     // store max distance we can pull from middle of string perpendicularly
     distMax = rDistMax*len;
     //
@@ -432,6 +446,19 @@ class Thready {
     t = 0;
     // we are on our first cycle of oscillation
     isFirstOsc = isOsc = true;		  
+  }
+  
+  void resizeTo(float l) {
+    isResizing = true;
+    // store target position
+    ypt0 = yAxis-l/2;
+    ypt1 = yAxis+l/2;
+  }
+  
+  void resizeDone() {
+    isResizing = false;
+    // update position one last time
+    updPos();  
   }
 }
 

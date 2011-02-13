@@ -19,7 +19,9 @@ class Drawer {
   
   // redraw my line
   void redraw() {
+    stroke(0, 255, 0);
     line(xp0, yp0, xp1, yp1);
+    //addThread(xp0, yp0, xp1, yp1);
   }  
 
   // done with current drawing 

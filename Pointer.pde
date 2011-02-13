@@ -1,5 +1,5 @@
 class Pointer {
-  float stillThreshold = 2.0;
+  float stillDistThreshold = 5.0;
   
   PVector location = new PVector(0,0);
   PVector prevLocation = new PVector(0,0);
@@ -25,7 +25,7 @@ class Pointer {
   
   boolean isStationary(){
     float d = dist(prevLocation.x, prevLocation.y, location.x, location.y);
-    return (d < stillThreshold);
+    return (d < stillDistThreshold);
   }
   
   boolean atOrigin(){

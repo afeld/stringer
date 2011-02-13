@@ -8,6 +8,9 @@ import org.openkinect.processing.*;
 
 // Have kinect?
 boolean haveKinect = true;
+// counts until "stillness"
+int stillThreshold = 30;
+
 // variables
 boolean isMouseDown = false;
 // is user engaged, playing, within threshhold
@@ -137,7 +140,7 @@ void updKinectInfo(){
     fill(255, 200);
     noStroke();
     smooth();
-    ellipse(hand.location.x, yAxis, 25,25);
+    ellipse(getUserX(), getUserY(), 25,25);
     noSmooth();
   }
 }
@@ -152,6 +155,19 @@ void updPos() {
   // set hand pos
   if (haveKinect) {
     hand.updateLocation(tracker.getLerpedPos());
+    
+    if (isDrawMode && isEngaged && hand.stillCount == stillThreshold) {
+      if (drawer0 == null) {
+        println("********start");
+        // start drawing
+        drawer0 = new Drawer(getUserX(), getUserY());
+      } else {
+        println("-----stop");
+        // stop drawing
+        drawer0.done();
+        drawer0 = null;
+      }
+    }
     //hand.location = tracker.getLerpedPos();
   }
   // how much time has elapsed since last update?
@@ -263,6 +279,8 @@ void engage() {
 // disengage
 void disengage() {
   isEngaged = false;
+  
+  drawer0 = null;
   // drop all threads
   if (isGrabbing()) dropAll();
 }
@@ -338,7 +356,7 @@ float getUserX() {
 }
 
 float getUserY() {
-  if (haveKinect) return yAxis;
+  if (haveKinect) return hand.location.y;
   return mouseY-yo;
 }
 

@@ -55,9 +55,9 @@ Kinect kinect;
 // Sidewalk installation
 Sidewalk sidewalk;
 
-PVector handPos;
-// middle y axis
 float yAxis;
+Pointer hand;
+
 
 // -----------------------------------------------------
 // Setup and draw loop
@@ -76,6 +76,8 @@ void setup() {
   } else {
     w = 640; h = 520;
   }
+  // create pointer
+  hand = new Pointer();
   size(w,h);
   // store y axis
   yAxis = height/2;
@@ -135,8 +137,7 @@ void updKinectInfo(){
     fill(255, 200);
     noStroke();
     smooth();
-    ellipse(handPos.x, yAxis, 25,25);
-    //ellipse(getUserX(), getUserY(), 25,25);
+    ellipse(hand.location.x, yAxis, 25,25);
     noSmooth();
   }
 }
@@ -149,7 +150,10 @@ void updTime() {
 // update position general
 void updPos() {
   // set hand pos
-  if (haveKinect) handPos = tracker.getLerpedPos();
+  if (haveKinect) {
+    hand.updateLocation(tracker.getLerpedPos());
+    //hand.location = tracker.getLerpedPos();
+  }
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
   // get new position
@@ -329,33 +333,12 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  // if mouse is down, trump the kinect
-  /*
-  if (isMouseDown || !haveKinect) {
-    return mouseX-xo;
-  } else {
-  */
-    if (haveKinect) {
-      // just return our y center
-      return handPos.x;
-    }
-  //}
-  return mouseX-xo;  
+  if (haveKinect) return hand.location.x;
+  return mouseX-xo;
 }
 
 float getUserY() {
-  // if mouse is down, trump the kinect
-  /*
-  if (isMouseDown || !haveKinect) {
-    return mouseY-yo;
-  } else {
-  */
-    if (haveKinect) {
-      //return handPos.y;
-      // keep it centered
-      return yAxis;
-    }
-  //}
+  if (haveKinect) return yAxis;
   return mouseY-yo;
 }
 

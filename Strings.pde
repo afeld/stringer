@@ -6,7 +6,8 @@ import ddf.minim.effects.*;
 import org.openkinect.*;
 import org.openkinect.processing.*;
 
-
+// Have kinect?
+boolean haveKinect = true;
 // variables
 boolean isMouseDown = false;
 // is user engaged, playing, within threshhold
@@ -51,6 +52,8 @@ AudioSample[] arrSamples = new AudioSample[notes];
 // Kinect objects
 KinectTracker tracker;
 Kinect kinect;
+// Sidewalk installation
+Sidewalk sidewalk;
 
 PVector handPos;
 
@@ -59,51 +62,31 @@ PVector handPos;
 // -----------------------------------------------------  
 
 void setup() {
-  minim = new Minim(this);
+  int w, h;
   frameRate(40);
-  
-  kinect = new Kinect(this);
-  tracker = new KinectTracker();
-  
-  size(tracker.kw, tracker.kh+40);
-
-  // create some random threads for testing
-  /*
-  for (int i = 0; i < 3; i++) {    
-    addThread(random(width), random(height), random(width), random(height));
+  // sound class
+  minim = new Minim(this);
+  // are we using a kinect?
+  if (haveKinect) {
+    kinect = new Kinect(this);
+    tracker = new KinectTracker();
+    w = tracker.kw; h = tracker.kh+40;
+  } else {
+    w = 640; h = 520;
   }
-  */
-  
-  // create some vertical strings for testing
-  float xp = 80;
-  float yp = height/2;
-  float len;
-  for (int i = 0; i < 10; i++) {    
-    len = 50+random(height-80);
-    addThread(xp, yp-len/2, xp, yp+len/2);
-    xp += 50;
-  }  
-   
+  size(w,h);
   //
-  // initialize audio
-  /*
-  String pre; AudioSample as;
-  for (int i = 0; i < notes; i++) {
-    pre = i < 10 ? "0" : "";
-    as = minim.loadSample("cello_" + pre + i + ".mp3", 512);
-    arrSamples[i] = as;
-  }
-  */
+  sidewalk = new Sidewalk();
 }
 
 // draw loop
 void draw() {
   // clear background
   background(0);
-  
-  tracker.track();
-  tracker.display();
-  
+  if (haveKinect) {
+    tracker.track();
+    tracker.display();
+  }
   // update everything
   upd(); 
 }
@@ -122,20 +105,18 @@ void upd() {
   if (isDrawMode && (drawer0 != null)) drawer0.upd();
   // update my threads
   updThreads();
-  // update mouse down mode?
-  if (isMouseDown && isDrawMode) {
-    updMouseDownDraw();
-  } else {
+  // update mouse down mode? or if we're in kinect mode, always run it
+  if (isMouseDown || haveKinect) {
     updMouseDown();
   }
   
-  updDisplay();
+  if (haveKinect) updKinectInfo();
 
   // increment time
   t0 = t1;
 }
 
-void updDisplay(){
+void updKinectInfo(){
   int t = tracker.getThreshold();
   fill(70);
   text("threshold: " + t + "    " +  
@@ -162,8 +143,7 @@ void updTime() {
 // update position general
 void updPos() {
   // set hand pos
-  //handPos = tracker.getPos();
-  handPos = tracker.getLerpedPos();
+  if (haveKinect) handPos = tracker.getLerpedPos();
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
   // get new position
@@ -212,11 +192,6 @@ void updMouseDown() {
       }
     }
   }
-}
-
-// update while mouse down in draw mode
-void updMouseDownDraw() {
-  
 }
 
 // update all threads
@@ -293,6 +268,8 @@ void keyPressed() {
       isDrawMode = true;
     }
   } else if (key == CODED) {
+    // break here if we don't have a kinect
+    if (!haveKinect) return;
     int t = tracker.getThreshold();
     if (keyCode == UP) {
       t+=5;
@@ -342,14 +319,12 @@ float getSpdAvg() {
 
 // get user position
 float getUserX() {
-  //float mouseXRel = mouseX-xo;
-  //return mouseXRel;
-  return handPos.x;
+  if (haveKinect) return handPos.x;
+  return mouseX-xo;
 }
 float getUserY() {
-  //float mouseYRel = mouseY-yo;
-  //return mouseYRel;
-  return handPos.y;
+  if (haveKinect) return handPos.y;
+  return mouseY-yo;
 }
 
 // -----------------------------------------------------
@@ -383,7 +358,7 @@ int sign(float n) {
 }
 
 void stop() {
-  tracker.quit();
+  if (haveKinect) tracker.quit();
   super.stop();
   minim.stop();  
 }

@@ -29,11 +29,12 @@ class Thready {
   // max amplitude of wave when oscillating (as ratio of length)
   float rAmpMax = 0.072;
   // minimum distance to move (px), amplitude, so if you brush it it always shows movement
-  float ampPxMin = 12;
+  float ampPxMin = 5;
   // maximum pixel distance to move, amplitude
   float ampPxMax = 33;
-  // pan range (-1 to 1)
-  float pan0 = -1; float pan1 = 1;
+  // pan range (-1 to 1) - range is -1 to 1, but make it slight because 
+  // it will shift already playing sounds
+  float pan0 = -0.4; float pan1 = 0.4;
   // frequency of oscillation - this is the increment per frame for t value.
   // higher gives higher frequency
   float freq0 = 0.5; // frequency for long strings
@@ -104,20 +105,10 @@ class Thready {
   boolean isOsc = false;
   // was just dropped
   boolean isFirstOsc = false;
-  // is being drawn by a car
-  boolean isMidDraw = false;	
   // not drawn yet
   boolean isVisible = false; 
   
-  // the car moving along me
-  Car car = null;
-  // car that is grabbing me
-  Car carGrab = null;
-  
   boolean isFirstRun = true;
-  // store array of which threads this one intersects with
-  //Thready[] arrIntersect = new Thready[100];
-  //boolean didInitIntersect = false;
   
   // -----------------------------------------------------
   // Constructor
@@ -268,13 +259,7 @@ class Thready {
   void updGrab() {
     float xu = getUserX(); float yu = getUserY();
     // get current mouse position
-    // if (carGrab != null) {
-    if (false) {
-      // var xu = this.carGrab.xp1; var yu = this.carGrab.yp1;
-    // else grabbed by user
-    } else {
-      xu = getUserX(); yu = getUserY();
-    }
+    xu = getUserX(); yu = getUserY();
     // how far away is it from the line
     float dxu = xu-xp0; float dyu = yu-yp0;
     // angle
@@ -339,7 +324,7 @@ class Thready {
   // Pluck and grab functions
   // -----------------------------------------------------  
   // brush over this string in one frame
-  void pluck(float xp, float yp, boolean byUser, Car car) {
+  void pluck(float xp, float yp, boolean byUser) {
     float xu = getUserX(); float yu = getUserY();
     // store as initial position
     xgi = xg = xp; ygi = yg = yp;
@@ -349,9 +334,6 @@ class Thready {
       xu = getUserX(); yu = getUserY();
       // get average speed from main class
       float spd = getSpdAvg();
-    } else {
-      //var xu = car.getX(); var yu = car.getY();
-      //var spd = 0.1; // just make speed a midpoint
     }
     // how far away is it from the line
     float dxu = xu-xp0; float dyu = yu-yp0;			
@@ -392,25 +374,15 @@ class Thready {
     }
     // calculate gain
     float gain = lerp(gain0, gain1, rStrength);
-    // set pan based on x position
-    // var panRat = lerp(this.pan0, this.pan1, lim(xu/this.m.width, 0, 1));
-    playNote(gain);
+    // set pan based on x position - from -1 to 1
+    float pan = lerp(pan0, pan1, lim(xu/width, 0, 1));
+    //
+    playNote(gain, pan);
   }
   
   // grab this string and hold it
-  void grab(float xp, float yp, boolean byUser, Car car) {
+  void grab(float xp, float yp, boolean byUser) {
     grabbed++;
-    if (byUser) {
-      //
-      carGrab = null;
-    } else {
-      /*
-      // store car that is grabbing me, and link me to the car
-      carGrab = car; this.carGrab.thrGrab = this;
-      // grabbed by car
-      //console.log(this.route.ind + ", " + this.ind + ": grabbed by car : " + car.ind);
-      */
-    }
     // store as initial position
     xgi = xg = xp; ygi = yg = yp;
     // start counter			
@@ -431,15 +403,10 @@ class Thready {
     amp = rStrength*ampMax;
     // calculate gain
     float gain = lerp(gain0, gain1, rStrength);
-    /*
-    // set pan based on x position
-    var posRat = lim((this.xg+this.xo)/this.m.width, 0, 1);
-    // set panning ratio -1 to 1
-    var pan = lerp(this.pan0, this.pan1, posRat);
-    //
-    this.playNote(vol, pan);
-    */
-    playNote(gain);
+    // set pan based on x position - from -1 to 1
+    float pan = lerp(pan0, pan1, lim(getUserX()/width, 0, 1));
+    // play note
+    playNote(gain, pan);
     // start oscillation
     this.startOsc();	
   } 
@@ -447,13 +414,11 @@ class Thready {
   // -----------------------------------------------------
   // Other functions
   // -----------------------------------------------------
-  void playNote(float gain) {
-    // normalize pan to -1 to 1
-    // smPlayNote(this.pitchInd, vol, pan);
-    //auPlayNote(pitchInd);
-    if (au.hasControl(Controller.GAIN)) {
-      au.setGain(gain);
-    }
+  void playNote(float gain, float pan) {
+    // set volume and pan
+    if (au.hasControl(Controller.GAIN)) { au.setGain(gain); }
+    if (au.hasControl(Controller.PAN)) { au.setPan(pan); }
+    // trigger the sample
     au.trigger();    
   }
   

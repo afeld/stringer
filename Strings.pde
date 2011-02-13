@@ -9,12 +9,14 @@ import org.openkinect.processing.*;
 
 // variables
 boolean isMouseDown = false;
+// is user engaged, playing, within threshhold
+boolean isEngaged = false;
 // are we in draw mode?
-boolean isDrawMode = true;
+boolean isDrawMode = false;
 // my current drawing object
 Drawer drawer0;
 // min and max speed, when to cap it - pixels per millisecond
-float spdMin = 70; float spdMax = 1500; float spd;
+float spdMin = 70; float spdMax = 1300; float spd;
 // min max speed as a ratio
 float rSpd = 0;
 // average speed over the past few frames
@@ -46,9 +48,7 @@ int notes = 38;
 Minim minim;
 // array of audio player objects
 AudioSample[] arrSamples = new AudioSample[notes];
-//AudioSnippet[] arrSamples = new AudioSnippet[notes];
-
-
+// Kinect objects
 KinectTracker tracker;
 Kinect kinect;
 
@@ -72,7 +72,18 @@ void setup() {
   for (int i = 0; i < 3; i++) {    
     addThread(random(width), random(height), random(width), random(height));
   }
-  */  
+  */
+  
+  // create some vertical strings for testing
+  float xp = 80;
+  float yp = height/2;
+  float len;
+  for (int i = 0; i < 10; i++) {    
+    len = 50+random(height-80);
+    addThread(xp, yp-len/2, xp, yp+len/2);
+    xp += 50;
+  }  
+   
   //
   // initialize audio
   /*
@@ -88,14 +99,13 @@ void setup() {
 // draw loop
 void draw() {
   // clear background
-  background(255);
+  background(0);
   
   tracker.track();
   tracker.display();
   
   // update everything
-  upd();
-  
+  upd(); 
 }
 
 // -----------------------------------------------------
@@ -127,14 +137,21 @@ void upd() {
 
 void updDisplay(){
   int t = tracker.getThreshold();
-  fill(0);
+  fill(70);
   text("threshold: " + t + "    " +  
-    "framerate: " + (int)frameRate + "    " + 
-    "UP increase threshold, DOWN decrease threshold",10,height-15); 
+    "framerate: " + (int)frameRate + "    ", 10, height-15);
+    //"UP increase threshold, DOWN decrease threshold",10,height-15); 
   
-  fill(50,100,250,200);
-  noStroke();
-  ellipse(handPos.x,handPos.y,20,20);
+  // show the hand position
+  if (isEngaged) {
+    // red fill
+    //fill(215,0,0,240);
+    fill(255, 200);
+    noStroke();
+    smooth();
+    ellipse(handPos.x,handPos.y,25,25);
+    noSmooth();
+  }
 }
 
 // main update function
@@ -144,12 +161,11 @@ void updTime() {
 
 // update position general
 void updPos() {
-  handPos = tracker.getPos();
-  
+  // set hand pos
+  //handPos = tracker.getPos();
+  handPos = tracker.getLerpedPos();
   // how much time has elapsed since last update?
   float elap = (t1-t0)/1000;
-  // reset the channels, nothing is playing anymore. Fixes bug where channel count doesn't go to zero
-  // if (((this.t1-this.tNote) > 0.7) && (this.chanInUse != 0)) this.chanInUse = 0;
   // get new position
   xp1 = getUserX(); yp1 = getUserY();
   // update point objects
@@ -163,7 +179,7 @@ void updPos() {
   spd = dist/elap;
   // normalize it from 0 to 1
   rSpd = lim((spd-spdMin)/(spdMax-spdMin), 0, 1);
-  // get average
+  // get average speed as ratio
   rSpdAvg = (rSpdAvg*(fAvg-1)/fAvg) + (rSpd*(1/fAvg));
   // store previous position
   xp0 = xp1; yp0 = yp1;
@@ -189,10 +205,10 @@ void updMouseDown() {
       // is the user moving too fast to allow grabbing of this string?
       if(getSpdAvg() <= rSpdGrab) {
         // grab new thread
-        th.grab(xi, yi, true, null);
+        th.grab(xi, yi, true);
       } else {
         // brush over thread
-        th.pluck(xi, yi, true, null);
+        th.pluck(xi, yi, true);
       }
     }
   }
@@ -219,7 +235,7 @@ void updThreads() {
 
 
 // -----------------------------------------------------
-// mouse listeners
+// mouse/engagement listeners
 // -----------------------------------------------------
 
 // mouseDown
@@ -250,6 +266,20 @@ void mouseReleased() {
     // if we currently have one
     if (isGrabbing()) dropAll();
   }
+}
+
+// engage 
+void engage() {
+  isEngaged = true;
+  // check instant grab? (haven't implemented this function here)
+  checkInstantGrab();
+}
+
+// disengage
+void disengage() {
+  isEngaged = false;
+  // drop all threads
+  if (isGrabbing()) dropAll();
 }
 
 void keyPressed() {
@@ -355,5 +385,6 @@ int sign(float n) {
 void stop() {
   tracker.quit();
   super.stop();
+  minim.stop();  
 }
 

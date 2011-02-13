@@ -94,7 +94,7 @@ class Thready {
   // lowest and highest volume for notes triggered by user
   float vol0 = 0.3; float vol1 = 0.6;
   // gain range triggered by user (db change)
-  float gain0 = -15; float gain1 = -2;
+  float gain0 = -10; float gain1 = -1;
   // is update on
   boolean isUpdOn = false;
   // oscillation direction (-1 or 1)
@@ -432,6 +432,8 @@ class Thready {
     // set volume and pan
     if (au.hasControl(Controller.GAIN)) { au.setGain(gain); }
     if (au.hasControl(Controller.PAN)) { au.setPan(pan); }
+    // tell sidewalk we played a note
+    sidewalk.userPlayed();
     // trigger the sample
     au.trigger();    
   }

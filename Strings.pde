@@ -118,9 +118,10 @@ void upd() {
   if (isMouseDown || haveKinect) {
     updMouseDown();
   }
-  
+  // update kinect info
   if (haveKinect) updKinectInfo();
-
+  // update sidewalk
+  sidewalk.upd();
   // increment time
   t0 = t1;
 }

@@ -1,4 +1,4 @@
-class KinectTracker {
+class KinectTracker extends InputDevice {
 
   // Size of kinect image
   int kw = 640;
@@ -7,8 +7,6 @@ class KinectTracker {
   int threshold = 700;
   // lerp easing - from 0 to 1, how quickly dot eases to position
   float lerpEase = 0.2;
-  // Raw location
-  PVector loc;
   // Interpolated location
   PVector lerpedLoc;
   // Depth data
@@ -38,8 +36,13 @@ class KinectTracker {
       depthLookUp[i] = rawDepthToMeters(i);
     }    
   }
+  
+  void start(){
+    this.track();
+  }
 
   // Track image
+  // DEPRECATED
   void track() {
 
     // Get the raw depth as array of integers
@@ -130,7 +133,12 @@ class KinectTracker {
     // Draw the image
     image(display,0,0);
   }
+  
+  void stop(){
+    this.quit();
+  }
 
+  // DEPRECATED
   void quit() {
     kinect.quit();
   }

@@ -49,7 +49,7 @@ Minim minim;
 // array of audio player objects
 AudioSample[] arrSamples = new AudioSample[notes];
 // Kinect objects
-KinectTracker tracker;
+InputDevice tracker;
 Kinect kinect;
 
 PVector handPos;
@@ -101,7 +101,7 @@ void draw() {
   // clear background
   background(0);
   
-  tracker.track();
+  tracker.start();
   tracker.display();
   
   // update everything
@@ -383,7 +383,7 @@ int sign(float n) {
 }
 
 void stop() {
-  tracker.quit();
+  tracker.stop();
   super.stop();
   minim.stop();  
 }

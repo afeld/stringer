@@ -4,7 +4,8 @@ class KinectTracker {
   int kw = 640;
   int kh = 480;
   // Set default threshhold
-  int threshold = 970;
+  int lowThreshold = 200;
+  int highThreshold = 900;
   // lerp easing - from 0 to 1, how quickly dot eases to position
   float lerpEase = 0.2;
   // Raw location
@@ -57,7 +58,7 @@ class KinectTracker {
         // Grabbing the raw depth
         int rawDepth = depth[offset];
         // Testing against threshold
-        if (rawDepth < threshold) {
+        if (inRange(rawDepth)) {
           sumX += x;
           sumY += y;
           count++;
@@ -109,9 +110,9 @@ class KinectTracker {
 
         int pix = x+y*display.width;
         //
-        if (rawDepth < threshold) {
+        if (inRange(rawDepth)) {
           // set color for the ones in threshhold
-          rat = 1-(float)rawDepth/threshold;
+          rat = 1-(float)rawDepth/highThreshold;
           // set the grey value proportional to the depth
           // display.pixels[pix] = color(rat*255);
           display.pixels[pix] = color(50+rat*120);
@@ -131,17 +132,23 @@ class KinectTracker {
     // Draw the image
     image(display,0,0);
   }
+  
+  boolean inRange(int rawDepth){
+    return (rawDepth < highThreshold && rawDepth > lowThreshold);
+  }
 
   void quit() {
     kinect.quit();
   }
 
+  // returns the high threshold
   int getThreshold() {
-    return threshold;
+    return highThreshold;
   }
 
+  // sets the high threshold
   void setThreshold(int t) {
-    threshold =  t;
+    highThreshold =  t;
   }
   
   // These functions come from: http://graphics.stanford.edu/~mdfisher/Kinect.html

@@ -9,6 +9,13 @@ class Sidewalk {
   float[] arrLen = new float[strings];
   // length range
   float len0 = 50; float len1 = height-20;
+  // timer variables
+  float t0 = millis();
+  float t1 = t0;  
+  // timer - minimum seconds of time between reconfiguring
+  float tChange = 3.0;
+  // has user plucked a thread since last reconfiguration?
+  boolean hasPlayed = false;
   
   // -----------------------------------------------------
   // Constructor
@@ -29,8 +36,27 @@ class Sidewalk {
     }
   }
   
+  // Update function
+  void upd() {
+    // how much time elapsed since last reconfigure
+    t1 = millis();
+    float elap = (t1-t0)/1000;
+    // only reconfigure while not currently engaged
+    if ((elap > tChange) && !isEngaged && !isMouseDown && hasPlayed) {
+      reconfigure();
+    }
+  }  
+
+  // User played
+  void userPlayed() {
+    // stoer the last time the user plucked
+    t0 = millis();
+    if (!hasPlayed) hasPlayed = true;
+  }
+  
   // Move strings to 
   void reconfigure() {
+    hasPlayed = false;
     float len;
     for (int i = 0; i < strings; i++) {
       len = lerp(len0, len1, random(1));

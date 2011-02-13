@@ -7,7 +7,7 @@ import org.openkinect.*;
 import org.openkinect.processing.*;
 
 // Have kinect?
-boolean haveKinect = true;
+boolean haveKinect = false;
 // variables
 boolean isMouseDown = false;
 // is user engaged, playing, within threshhold
@@ -115,9 +115,10 @@ void upd() {
   if (isMouseDown || haveKinect) {
     updMouseDown();
   }
-  
+  // update kinect info
   if (haveKinect) updKinectInfo();
-
+  // update sidewalk
+  sidewalk.upd();
   // increment time
   t0 = t1;
 }

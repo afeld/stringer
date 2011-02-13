@@ -4,7 +4,7 @@ class KinectTracker {
   int kw = 640;
   int kh = 480;
   // Set default threshhold
-  int threshold = 900;
+  int threshold = 970;
   // lerp easing - from 0 to 1, how quickly dot eases to position
   float lerpEase = 0.2;
   // Raw location

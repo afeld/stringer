@@ -138,7 +138,11 @@ void updKinectInfo(){
   if (isEngaged) {
     // red fill
     //fill(215,0,0,240);
-    fill(255, 200);
+    if (isDrawMode && drawer0 != null) {
+      fill(0, 255, 0);
+    } else {
+      fill(255, 200);
+    }
     noStroke();
     smooth();
     ellipse(getUserX(), getUserY(), 25,25);
@@ -298,6 +302,12 @@ void keyPressed() {
       println("You are in draw mode.");
       isDrawMode = true;
     }
+  } else if (key == 'c' || key == 'C') {
+    for (int i = 0; i < ctThreads; i++) {
+      arrThreads[i] = null;
+    }
+    ctThreads = 0;
+    sidewalk.strings = 0;
   } else if (key == CODED) {
     // break here if we don't have a kinect
     if (!haveKinect) return;
